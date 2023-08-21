@@ -1,0 +1,147 @@
+# Data provided is an example of data representing exam scores from 1000 students in an online math class.
+
+title: "Data Cleaning in R" 
+output: html_notebook
+---
+
+```{r message=FALSE, warning=FALSE}
+# load libraries
+library(readr)
+library(dplyr)
+```
+
+```{r}
+# list files
+student_files <- list.files(pattern = 'exams_.*csv')
+print(student_files)
+```
+```{r message=FALSE}
+# read files
+df_list <- lapply(student_files,read_csv)
+```
+
+```{r}
+# concatenate data frames
+students <- bind_rows(df_list)
+students
+```
+
+```{r}
+# number of rows in students
+nrow_students <- nrow(students)
+print(nrow_students)
+```{r}
+# load students data frame
+load("students.Rda")
+```
+
+```{r}
+# original column names
+original_col_names <- colnames(students)
+print(original_col_names)
+```
+
+```{r}
+# gather columns
+students <- students %>%
+  gather('fractions','probability',key='exam', value='score')
+head(students)
+```
+
+```{r}
+# updated column names
+gathered_col_names <- colnames(students)
+print(gathered_col_names)
+```
+
+```{r}
+# unique value counts of exam
+exam_counts <- students %>%
+  count(exam)
+exam_counts
+```
+--# Dealing with Duplicates
+
+```{r}
+# load students data frame
+load("students.Rda")
+```
+
+```{r}
+# drop id column
+students <- students %>%
+select(-id)
+head(students)
+```
+
+```{r}
+# find duplicated rows
+duplicates <- students %>%
+  duplicated()
+```
+
+```{r}
+# count duplicated rows
+duplicate_counts <- duplicates %>%
+  table()
+duplicate_counts
+```
+
+```{r}
+# remove duplicated rows, keep only unique rows
+unique_students <- students %>%
+  distinct()
+```
+
+```{r}
+# find and count duplicated rows in updated data frame
+updated_duplicates <- unique_students %>%
+  duplicated() %>%
+  table()
+updated_duplicates
+```
+--# Splitting By Index
+# In this data set, there is a columm 'gender_age', which sounds like it contains both 'gender' and 'age'
+
+```{r}
+# add gender and age columns
+students <- students %>%
+  mutate(gender = str_sub(gender_age,1,1),
+         age = str_sub(gender_age,2))
+head(students)
+```
+
+```{r}
+# drop gender_age column
+students <- students %>%
+  select(-gender_age)
+head(students)
+```
+
+--# Splitting by Character
+
+```{r}
+# separate the full_name column
+students <- students %>%
+  separate(full_name, c('first_name','last_name'),' ',extra ='merge')
+head(students)
+```
+---# String Parsing
+
+```{r}
+# remove % from score column
+students <- students %>%
+  mutate(score=gsub('\\%','',score))
+head(students)
+```
+
+```{r}
+# change score column to numeric
+students <- students %>%
+  mutate(score = as.numeric(score))
+
+```{r}
+# update age column
+students <- students %>%
+  mutate(age = as.numeric(age))
+```
